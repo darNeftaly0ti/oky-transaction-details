@@ -1,0 +1,42 @@
+{
+  "name": "oky-wallet-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OKY Wallet — Transaction Explorer",
+  "scripts": {
+    "mock": "node mock-server/server.mjs",
+    "develop": "concurrently \"npm run mock\" \"gatsby develop\"",
+    "start": "concurrently \"npm run mock\" \"gatsby develop\"",
+    "build": "gatsby build",
+    "serve": "gatsby serve",
+    "clean": "gatsby clean",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.11.0",
+    "gatsby": "^5.13.0",
+    "gatsby-plugin-postcss": "^6.13.0",
+    "gatsby-plugin-typescript": "^5.13.0",
+    "graphql": "^16.9.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.2.1",
+    "graphql-yoga": "^5.21.0",
+    "jsdom": "^25.0.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
