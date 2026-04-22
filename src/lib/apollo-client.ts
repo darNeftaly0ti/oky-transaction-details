@@ -61,3 +61,12 @@ export const client = new ApolloClient({
     },
   },
 });
+
+
+
+//Comando	Para qué sirve
+//npm test
+//Corre los tests de Vitest
+//npm run typecheck
+//Verifica TypeScript estricto
+//npm run build
