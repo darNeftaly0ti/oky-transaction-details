@@ -10,6 +10,7 @@ const config: GatsbyConfig = {
   plugins: [
     "gatsby-plugin-typescript",
     "gatsby-plugin-postcss",
+    "gatsby-plugin-netlify",
   ],
 };
 

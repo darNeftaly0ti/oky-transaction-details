@@ -16,6 +16,7 @@
   "dependencies": {
     "@apollo/client": "^3.11.0",
     "gatsby": "^5.13.0",
+    "gatsby-plugin-netlify": "^5.1.1",
     "gatsby-plugin-postcss": "^6.13.0",
     "gatsby-plugin-typescript": "^5.13.0",
     "graphql": "^16.9.0",
