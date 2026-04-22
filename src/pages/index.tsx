@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import type { HeadFC, PageProps } from "gatsby";
 import { navigate } from "gatsby";
 import Layout from "../components/Layout";
@@ -13,10 +13,10 @@ import StatsBar from "../components/StatsBar";
 import { useCharacters, API_PAGE_SIZE } from "../hooks/useCharacters";
 import { useCharacterDetail } from "../hooks/useCharacterDetail";
 
-const IndexPage: React.FC<PageProps> = ({ location }) => {
-  const params = new URLSearchParams(location.search);
-  const selectedId = params.get("id");
-
+// All Apollo hooks live here — never called during SSR.
+const IndexContent: React.FC<{ selectedId: string | null }> = ({
+  selectedId,
+}) => {
   const {
     characters,
     loading,
@@ -51,27 +51,15 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     }
   }, [selectedId, fetchCharacter, clearCharacter]);
 
-  const handleCardClick = useCallback((id: string) => {
-    void navigate(`/?id=${id}`);
-  }, []);
-
-  const handleCloseDetail = useCallback(() => {
-    void navigate("/");
-  }, []);
-
+  const handleCardClick = useCallback(
+    (id: string) => void navigate(`/?id=${id}`),
+    []
+  );
+  const handleCloseDetail = useCallback(() => void navigate("/"), []);
   const isDetailOpen = Boolean(selectedId);
 
   return (
-    <Layout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-          Transaction History
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">
-          Browse and search your recent wallet transactions.
-        </p>
-      </div>
-
+    <>
       <StatsBar />
 
       <SearchFilter
@@ -124,6 +112,32 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         loading={detailLoading}
         error={detailError ?? null}
       />
+    </>
+  );
+};
+
+// Shell — safe for SSR. Apollo hooks only run inside IndexContent.
+const IndexPage: React.FC<PageProps> = ({ location }) => {
+  const selectedId = new URLSearchParams(location.search).get("id");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  return (
+    <Layout>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+          Transaction History
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">
+          Browse and search your recent wallet transactions.
+        </p>
+      </div>
+
+      {mounted ? (
+        <IndexContent selectedId={selectedId} />
+      ) : (
+        <LoadingSkeleton count={9} />
+      )}
     </Layout>
   );
 };
