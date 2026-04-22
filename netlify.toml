@@ -3,6 +3,6 @@
   publish = "public"
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/transaction/*"
+  to = "/transaction/"
   status = 200
