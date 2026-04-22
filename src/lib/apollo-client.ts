@@ -1,21 +1,49 @@
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  from,
+} from "@apollo/client";
+import { RetryLink } from "@apollo/client/link/retry";
 
-// Public Rick and Morty GraphQL API — no auth, stable, ~826 records with
-// native pagination and filtering. The technical test explicitly allows any
-// domain; we map each "character" to a "transaction" in the UI.
 const httpLink = new HttpLink({
   uri:
     process.env.GATSBY_GRAPHQL_URI ?? "https://rickandmortyapi.com/graphql",
 });
 
+// Retry up to 4 times with exponential backoff + jitter.
+// The Rick and Morty API is rate-limited by Cloudflare (Error 1015) when
+// pages change rapidly. Retrying automatically hides transient failures
+// from the user without requiring a manual "Try Again" click.
+const retryLink = new RetryLink({
+  delay: {
+    initial: 800,   // wait 800ms before first retry
+    max: 8000,      // cap at 8s between retries
+    jitter: true,   // randomise slightly to avoid thundering herd
+  },
+  attempts: {
+    max: 4,
+    retryIf: (error) => {
+      if (!error) return false;
+      // Retry on network errors and rate-limit (429 / Cloudflare 1015)
+      const msg: string = (error.message ?? "").toLowerCase();
+      return (
+        error.networkError != null ||
+        msg.includes("networkerror") ||
+        msg.includes("rate limit") ||
+        msg.includes("429") ||
+        msg.includes("1015")
+      );
+    },
+  },
+});
+
 export const client = new ApolloClient({
-  link: httpLink,
+  link: from([retryLink, httpLink]),
   cache: new InMemoryCache({
     typePolicies: {
       Query: {
         fields: {
-          // Keep one cache entry per unique (page, filter) combination so
-          // switching pages or filters doesn't overwrite previous results.
           characters: {
             keyArgs: ["filter", "page"],
           },
@@ -26,9 +54,6 @@ export const client = new ApolloClient({
   defaultOptions: {
     watchQuery: {
       fetchPolicy: "cache-and-network",
-      // Rick and Morty returns a 404 with errors when a filter yields no
-      // results; `errorPolicy: "all"` lets the UI render the empty state
-      // instead of falling through to the generic error screen.
       errorPolicy: "all",
     },
     query: {
