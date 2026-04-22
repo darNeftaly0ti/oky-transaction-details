@@ -1,72 +1,76 @@
-// SpaceX API TypeScript interfaces for OKY Wallet Transaction Explorer
+// Rick and Morty GraphQL API — TypeScript interfaces.
+// The UI still speaks in terms of "transactions", but each entity is a Character.
 
-export interface RocketDetails {
-  description: string | null;
-  first_flight: string | null;
-  cost_per_launch: number | null;
+export type CharacterStatus = "Alive" | "Dead" | "unknown";
+
+export interface LocationRef {
+  id: string | null;
+  name: string;
+  dimension?: string | null;
+  type?: string | null;
 }
 
-export interface Rocket {
-  rocket_name: string;
-  rocket_type: string;
-  rocket?: RocketDetails | null;
-}
-
-export interface LaunchLinks {
-  mission_patch_small: string | null;
-  mission_patch: string | null;
-  article_link: string | null;
-  video_link: string | null;
-  flickr_images: string[] | null;
-}
-
-export interface LaunchSite {
-  site_name_long: string;
-}
-
-export interface Launch {
+export interface EpisodeRef {
   id: string;
-  mission_name: string;
-  launch_date_local: string;
-  launch_success: boolean | null;
-  details: string | null;
-  launch_site: LaunchSite | null;
-  links: LaunchLinks | null;
-  rocket: Rocket | null;
+  name: string;
+  episode: string;
+  air_date: string;
 }
 
-// Query response types
-export interface LaunchesData {
-  launches: Launch[];
-}
-
-export interface LaunchData {
-  launch: Launch;
-}
-
-// Query variable types
-export interface LaunchFind {
-  mission_name?: string;
-  launch_success?: boolean;
-  rocket_name?: string;
-}
-
-export interface LaunchesVars {
-  limit?: number;
-  offset?: number;
-  find?: LaunchFind;
-}
-
-export interface LaunchVars {
+export interface Character {
   id: string;
+  name: string;
+  status: CharacterStatus;
+  species: string;
+  type?: string | null;
+  gender: string;
+  image: string;
+  created: string;
+  origin: LocationRef | null;
+  location: LocationRef | null;
+  episode?: EpisodeRef[];
 }
 
-export interface LaunchesCountData {
-  launchesCount: number;
+export interface PageInfo {
+  count: number;
+  pages: number;
+  next: number | null;
+  prev: number | null;
+}
+
+export interface CharactersPayload {
+  info: PageInfo;
+  results: Character[] | null;
+}
+
+// Query response shapes
+export interface CharactersData {
+  characters: CharactersPayload | null;
+}
+
+export interface CharacterData {
+  character: Character;
 }
 
 export interface StatsData {
-  total: number;
-  successful: number;
-  failed: number;
+  total: { info: Pick<PageInfo, "count"> } | null;
+  alive: { info: Pick<PageInfo, "count"> } | null;
+  dead: { info: Pick<PageInfo, "count"> } | null;
+}
+
+// Query variables
+export interface CharacterFilter {
+  name?: string;
+  status?: string;
+  species?: string;
+  gender?: string;
+}
+
+export interface CharactersVars {
+  page?: number;
+  filter?: CharacterFilter;
+}
+
+export interface CharacterVars {
+  id: string;
 }

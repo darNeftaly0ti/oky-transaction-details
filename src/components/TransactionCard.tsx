@@ -1,8 +1,8 @@
 import React from "react";
-import type { Launch } from "../types/api";
+import type { Character, CharacterStatus } from "../types/api";
 
 interface TransactionCardProps {
-  launch: Launch;
+  character: Character;
   onClick: (id: string) => void;
 }
 
@@ -16,22 +16,37 @@ const formatDate = (dateStr: string): string => {
 };
 
 const getStatusConfig = (
-  success: boolean | null
+  status: CharacterStatus
 ): { label: string; className: string } => {
-  if (success === true)
-    return { label: "Success", className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400" };
-  if (success === false)
-    return { label: "Failed", className: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-400" };
-  return { label: "Pending", className: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400" };
+  if (status === "Alive")
+    return {
+      label: "Alive",
+      className:
+        "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400",
+    };
+  if (status === "Dead")
+    return {
+      label: "Dead",
+      className:
+        "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-400",
+    };
+  return {
+    label: "Unknown",
+    className:
+      "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400",
+  };
 };
 
-const TransactionCard: React.FC<TransactionCardProps> = ({ launch, onClick }) => {
-  const status = getStatusConfig(launch.launch_success);
+const TransactionCard: React.FC<TransactionCardProps> = ({
+  character,
+  onClick,
+}) => {
+  const status = getStatusConfig(character.status);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      onClick(launch.id);
+      onClick(character.id);
     }
   };
 
@@ -39,7 +54,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({ launch, onClick }) =>
     <div
       role="listitem"
       tabIndex={0}
-      onClick={() => onClick(launch.id)}
+      onClick={() => onClick(character.id)}
       onKeyDown={handleKeyDown}
       className="bg-white dark:bg-slate-800 rounded-xl shadow-sm
         border border-slate-200 dark:border-slate-700 p-4 cursor-pointer
@@ -47,17 +62,18 @@ const TransactionCard: React.FC<TransactionCardProps> = ({ launch, onClick }) =>
         transition-all duration-200
         focus:outline-none focus:ring-2 focus:ring-oky-secondary focus:ring-offset-2
         dark:focus:ring-offset-slate-900"
-      aria-label={`Transaction: ${launch.mission_name}`}
+      aria-label={`Transaction: ${character.name}`}
     >
       <div className="flex items-start gap-3">
-        {launch.links?.mission_patch_small ? (
+        {character.image ? (
           <img
-            src={launch.links.mission_patch_small}
-            alt={`${launch.mission_name} patch`}
-            className="w-12 h-12 object-contain rounded-lg bg-slate-100 dark:bg-slate-700 p-1 flex-shrink-0"
+            src={character.image}
+            alt={`${character.name} avatar`}
+            loading="lazy"
+            className="w-14 h-14 object-cover rounded-lg bg-slate-100 dark:bg-slate-700 flex-shrink-0"
           />
         ) : (
-          <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+          <div className="w-14 h-14 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
             <span className="text-slate-400 text-xs font-medium">N/A</span>
           </div>
         )}
@@ -65,32 +81,47 @@ const TransactionCard: React.FC<TransactionCardProps> = ({ launch, onClick }) =>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             <h3 className="font-semibold text-slate-800 dark:text-slate-100 truncate text-sm sm:text-base">
-              {launch.mission_name}
+              {character.name}
             </h3>
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${status.className}`}>
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${status.className}`}
+            >
               {status.label}
             </span>
           </div>
 
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-            {formatDate(launch.launch_date_local)}
+            {formatDate(character.created)}
           </p>
 
-          <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
             <span className="inline-flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
               </svg>
-              {launch.rocket?.rocket_name ?? "Unknown"}
+              {character.species}
             </span>
-            {launch.rocket?.rocket_type && (
-              <span className="text-slate-400 dark:text-slate-500">({launch.rocket.rocket_type})</span>
+            {character.gender && character.gender !== "unknown" && (
+              <span className="text-slate-400 dark:text-slate-500">
+                · {character.gender}
+              </span>
             )}
           </div>
 
-          {launch.details && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
-              {launch.details}
+          {character.origin?.name && character.origin.name !== "unknown" && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 truncate">
+              Origin: {character.origin.name}
             </p>
           )}
         </div>

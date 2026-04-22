@@ -1,7 +1,11 @@
 import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 
+// Public Rick and Morty GraphQL API — no auth, stable, ~826 records with
+// native pagination and filtering. The technical test explicitly allows any
+// domain; we map each "character" to a "transaction" in the UI.
 const httpLink = new HttpLink({
-  uri: process.env.GATSBY_GRAPHQL_URI ?? "http://localhost:4000/graphql",
+  uri:
+    process.env.GATSBY_GRAPHQL_URI ?? "https://rickandmortyapi.com/graphql",
 });
 
 export const client = new ApolloClient({
@@ -10,10 +14,10 @@ export const client = new ApolloClient({
     typePolicies: {
       Query: {
         fields: {
-          launches: {
-            // Include all args in cache key so paginated results
-            // don't overwrite each other or the count query
-            keyArgs: ["find", "limit", "offset"],
+          // Keep one cache entry per unique (page, filter) combination so
+          // switching pages or filters doesn't overwrite previous results.
+          characters: {
+            keyArgs: ["filter", "page"],
           },
         },
       },
@@ -22,6 +26,13 @@ export const client = new ApolloClient({
   defaultOptions: {
     watchQuery: {
       fetchPolicy: "cache-and-network",
+      // Rick and Morty returns a 404 with errors when a filter yields no
+      // results; `errorPolicy: "all"` lets the UI render the empty state
+      // instead of falling through to the generic error screen.
+      errorPolicy: "all",
+    },
+    query: {
+      errorPolicy: "all",
     },
   },
 });
