@@ -4,5 +4,5 @@
 
 [[redirects]]
   from = "/transaction/*"
-  to = "/transaction/"
+  to = "/transaction/index.html"
   status = 200
