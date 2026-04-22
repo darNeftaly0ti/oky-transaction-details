@@ -1,8 +1,3 @@
 [build]
   command = "npm run build"
   publish = "public"
-
-[[redirects]]
-  from = "/transaction/*"
-  to = "/transaction/index.html"
-  status = 200
