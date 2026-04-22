@@ -79,18 +79,32 @@ const IndexContent: React.FC<{ selectedId: string | null }> = ({
       ) : isEmpty ? (
         <EmptyState message="No transactions match your search criteria." />
       ) : (
-        <>
-          <div className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-            Showing{" "}
-            <span className="font-medium text-slate-700 dark:text-slate-200">
-              {Math.min((currentPage - 1) * API_PAGE_SIZE + 1, totalItems)}–
-              {Math.min(currentPage * API_PAGE_SIZE, totalItems)}
-            </span>{" "}
-            of{" "}
-            <span className="font-medium text-slate-700 dark:text-slate-200">
-              {totalItems}
-            </span>{" "}
-            transactions
+        // key forces a re-mount (and therefore the fade-in animation) whenever
+        // the page or filter changes, giving the user visual feedback that new
+        // data has arrived even when the skeleton is too fast to notice.
+        <div key={`${currentPage}-${totalItems}`} className="animate-fade-in">
+          <div className="mb-4 text-sm text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>
+              Showing{" "}
+              <span className="font-medium text-slate-700 dark:text-slate-200">
+                {Math.min((currentPage - 1) * API_PAGE_SIZE + 1, totalItems)}–
+                {Math.min(currentPage * API_PAGE_SIZE, totalItems)}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium text-slate-700 dark:text-slate-200">
+                {totalItems}
+              </span>{" "}
+              transactions
+            </span>
+            {loading && (
+              <span className="flex items-center gap-1.5 text-xs text-oky-secondary">
+                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                Updating…
+              </span>
+            )}
           </div>
           <TransactionList
             characters={characters}
@@ -102,7 +116,7 @@ const IndexContent: React.FC<{ selectedId: string | null }> = ({
             itemsPerPage={API_PAGE_SIZE}
             onPageChange={setCurrentPage}
           />
-        </>
+        </div>
       )}
 
       <TransactionDetail
