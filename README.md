@@ -1,5 +1,7 @@
 # OKY Wallet — Transaction Explorer
 
+**[Live Demo → https://okywallet.netlify.app](https://okywallet.netlify.app)**
+
 A mini-application simulating a digital wallet transaction history, built with React, TypeScript, Apollo Client and Gatsby. Data is consumed directly from the **public Rick and Morty GraphQL API** (no mocks, no backend of our own).
 
 Each character returned by the API is displayed as a "transaction" in the UI — the technical test explicitly allows any domain (rockets, characters, etc.); what matters is how the data is handled and presented.
