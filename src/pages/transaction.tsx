@@ -244,15 +244,24 @@ const TransactionDetailContent: React.FC<{ id: string }> = ({ id }) => {
 
 // Shell component — safe for SSR. Apollo hooks only run inside
 // TransactionDetailContent, which is mounted after the first browser paint.
+// navigate() must live in useEffect — calling it in the render body accesses
+// window directly, which breaks gatsby build's SSR pass.
 const TransactionDetailPage: React.FC<PageProps> = ({ params }) => {
   const id = params.id as string | undefined;
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
-  if (!id) {
-    void navigate("/");
-    return null;
-  }
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !id) {
+      void navigate("/");
+    }
+  }, [mounted, id]);
+
+  // During SSR (no id, not yet mounted) render nothing
+  if (!mounted || !id) return null;
 
   return (
     <Layout>
@@ -280,15 +289,7 @@ const TransactionDetailPage: React.FC<PageProps> = ({ params }) => {
           Back to transactions
         </Link>
 
-        {mounted ? (
-          <TransactionDetailContent id={id} />
-        ) : (
-          <div className="space-y-4 animate-pulse">
-            <div className="h-48 bg-slate-200 dark:bg-slate-700 rounded-2xl" />
-            <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-2/3" />
-            <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
-          </div>
-        )}
+        <TransactionDetailContent id={id} />
       </div>
     </Layout>
   );
