@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import type { HeadFC, PageProps } from "gatsby";
 import { navigate, Link } from "gatsby";
-import Layout from "../components/Layout";
-import { useCharacterDetail } from "../hooks/useCharacterDetail";
-import type { CharacterStatus } from "../types/api";
+import Layout from "../../components/Layout";
+import { useCharacterDetail } from "../../hooks/useCharacterDetail";
+import type { CharacterStatus } from "../../types/api";
 
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
@@ -37,8 +37,8 @@ const InfoItem: React.FC<{ label: string; value: string }> = ({
   </div>
 );
 
-// All Apollo hooks live here — this component is NEVER rendered during SSR
-// (it's only mounted after the parent's useEffect runs in the browser).
+// Apollo hooks live here — this component is NEVER rendered during SSR
+// (only mounted after the parent's useEffect runs in the browser).
 const TransactionDetailContent: React.FC<{ id: string }> = ({ id }) => {
   const { character, loading, error, fetchCharacter } = useCharacterDetail();
 
@@ -242,24 +242,19 @@ const TransactionDetailContent: React.FC<{ id: string }> = ({ id }) => {
   );
 };
 
-// Shell component — safe for SSR. Apollo hooks only run inside
-// TransactionDetailContent, which is mounted after the first browser paint.
-// navigate() must live in useEffect — calling it in the render body accesses
-// window directly, which breaks gatsby build's SSR pass.
-const TransactionDetailPage: React.FC<PageProps> = ({ params }) => {
+// File System Route: Gatsby resolves the `:id` URL segment and passes it as
+// `params.id`. This is a client-only route — hydration mounts the child,
+// which is when Apollo hooks are allowed to run.
+const TransactionDetailPage: React.FC<PageProps<object, object, unknown, { id?: string }>> = ({
+  params,
+}) => {
   const [mounted, setMounted] = useState(false);
-  const [id, setId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     setMounted(true);
-    // params.id from Gatsby's matchPath can arrive empty on client-side
-    // navigation. Reading from window.location is the reliable fallback.
-    const fromParams = params?.id as string | undefined;
-    const fromUrl = window.location.pathname.split("/").filter(Boolean).pop();
-    const resolvedId =
-      fromParams && fromParams !== "transaction" ? fromParams : fromUrl;
-    setId(resolvedId && resolvedId !== "transaction" ? resolvedId : undefined);
-  }, [params?.id]);
+  }, []);
+
+  const id = params?.id;
 
   useEffect(() => {
     if (mounted && !id) {
@@ -267,7 +262,6 @@ const TransactionDetailPage: React.FC<PageProps> = ({ params }) => {
     }
   }, [mounted, id]);
 
-  // During SSR (no id, not yet mounted) render nothing
   if (!mounted || !id) return null;
 
   return (
@@ -304,6 +298,6 @@ const TransactionDetailPage: React.FC<PageProps> = ({ params }) => {
 
 export default TransactionDetailPage;
 
-export const Head: HeadFC<object, { id?: string }> = () => (
+export const Head: HeadFC = () => (
   <title>Transaction Detail — OKY Wallet</title>
 );
