@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import type { HeadFC, PageProps } from "gatsby";
 import { navigate } from "gatsby";
 import Layout from "../components/Layout";
@@ -16,6 +16,11 @@ import { useCharacterDetail } from "../hooks/useCharacterDetail";
 const IndexPage: React.FC<PageProps> = ({ location }) => {
   const params = new URLSearchParams(location.search);
   const selectedId = params.get("id");
+
+  // Apollo hooks use `window` internally. During `gatsby build` the page is
+  // rendered in Node.js (no window), so we gate all data-fetching on mount.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const {
     characters,
@@ -72,58 +77,66 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         </p>
       </div>
 
-      <StatsBar />
-
-      <SearchFilter
-        onSearch={setSearchTerm}
-        onFilterStatus={setStatusFilter}
-        onFilterSpecies={setSpeciesFilter}
-        onSortChange={setSortOrder}
-        currentStatus={statusFilter}
-        currentSpecies={speciesFilter}
-        currentSort={sortOrder}
-      />
-
-      {loading && !characters.length ? (
-        <LoadingSkeleton count={API_PAGE_SIZE} />
-      ) : error ? (
-        <ErrorState message={error.message} onRetry={refetch} />
-      ) : isEmpty ? (
-        <EmptyState message="No transactions match your search criteria." />
+      {/* During SSR (gatsby build) window is unavailable — render a static
+          skeleton so the HTML shell is valid and Apollo only runs in-browser */}
+      {!mounted ? (
+        <LoadingSkeleton count={9} />
       ) : (
         <>
-          <div className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-            Showing{" "}
-            <span className="font-medium text-slate-700 dark:text-slate-200">
-              {Math.min((currentPage - 1) * API_PAGE_SIZE + 1, totalItems)}–
-              {Math.min(currentPage * API_PAGE_SIZE, totalItems)}
-            </span>{" "}
-            of{" "}
-            <span className="font-medium text-slate-700 dark:text-slate-200">
-              {totalItems}
-            </span>{" "}
-            transactions
-          </div>
-          <TransactionList
-            characters={characters}
-            onCardClick={handleCardClick}
+          <StatsBar />
+
+          <SearchFilter
+            onSearch={setSearchTerm}
+            onFilterStatus={setStatusFilter}
+            onFilterSpecies={setSpeciesFilter}
+            onSortChange={setSortOrder}
+            currentStatus={statusFilter}
+            currentSpecies={speciesFilter}
+            currentSort={sortOrder}
           />
-          <Pagination
-            currentPage={currentPage}
-            totalItems={totalItems}
-            itemsPerPage={API_PAGE_SIZE}
-            onPageChange={setCurrentPage}
+
+          {loading && !characters.length ? (
+            <LoadingSkeleton count={API_PAGE_SIZE} />
+          ) : error ? (
+            <ErrorState message={error.message} onRetry={refetch} />
+          ) : isEmpty ? (
+            <EmptyState message="No transactions match your search criteria." />
+          ) : (
+            <>
+              <div className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+                Showing{" "}
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  {Math.min((currentPage - 1) * API_PAGE_SIZE + 1, totalItems)}–
+                  {Math.min(currentPage * API_PAGE_SIZE, totalItems)}
+                </span>{" "}
+                of{" "}
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  {totalItems}
+                </span>{" "}
+                transactions
+              </div>
+              <TransactionList
+                characters={characters}
+                onCardClick={handleCardClick}
+              />
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                itemsPerPage={API_PAGE_SIZE}
+                onPageChange={setCurrentPage}
+              />
+            </>
+          )}
+
+          <TransactionDetail
+            character={selectedCharacter}
+            isOpen={isDetailOpen}
+            onClose={handleCloseDetail}
+            loading={detailLoading}
+            error={detailError ?? null}
           />
         </>
       )}
-
-      <TransactionDetail
-        character={selectedCharacter}
-        isOpen={isDetailOpen}
-        onClose={handleCloseDetail}
-        loading={detailLoading}
-        error={detailError ?? null}
-      />
     </Layout>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import type { HeadFC, PageProps } from "gatsby";
 import { navigate, Link } from "gatsby";
 import Layout from "../components/Layout";
@@ -40,6 +40,13 @@ const InfoItem: React.FC<{ label: string; value: string }> = ({
 const TransactionDetailPage: React.FC<PageProps> = ({ params }) => {
   const id = params.id as string | undefined;
 
+  // This page is a client-only route (/transaction/:id). Gatsby still
+  // generates a static HTML shell for it during `gatsby build`, which means
+  // Apollo hooks run in a Node.js environment where `window` is undefined.
+  // Gating on `mounted` ensures all Apollo logic runs only in the browser.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const { character, loading, error, fetchCharacter } = useCharacterDetail();
 
   useEffect(() => {
@@ -52,6 +59,9 @@ const TransactionDetailPage: React.FC<PageProps> = ({ params }) => {
     void navigate("/");
     return null;
   }
+
+  // Don't render Apollo-dependent content during SSR
+  if (!mounted) return null;
 
   return (
     <Layout>
