@@ -13,15 +13,10 @@ import StatsBar from "../components/StatsBar";
 import { useCharacters, API_PAGE_SIZE } from "../hooks/useCharacters";
 import { useCharacterDetail } from "../hooks/useCharacterDetail";
 
-const IndexPage: React.FC<PageProps> = ({ location }) => {
-  const params = new URLSearchParams(location.search);
-  const selectedId = params.get("id");
-
-  // Apollo hooks use `window` internally. During `gatsby build` the page is
-  // rendered in Node.js (no window), so we gate all data-fetching on mount.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
+// All Apollo hooks live here — never called during SSR.
+const IndexContent: React.FC<{ selectedId: string | null }> = ({
+  selectedId,
+}) => {
   const {
     characters,
     loading,
@@ -56,15 +51,76 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     }
   }, [selectedId, fetchCharacter, clearCharacter]);
 
-  const handleCardClick = useCallback((id: string) => {
-    void navigate(`/?id=${id}`);
-  }, []);
-
-  const handleCloseDetail = useCallback(() => {
-    void navigate("/");
-  }, []);
-
+  const handleCardClick = useCallback(
+    (id: string) => void navigate(`/?id=${id}`),
+    []
+  );
+  const handleCloseDetail = useCallback(() => void navigate("/"), []);
   const isDetailOpen = Boolean(selectedId);
+
+  return (
+    <>
+      <StatsBar />
+
+      <SearchFilter
+        onSearch={setSearchTerm}
+        onFilterStatus={setStatusFilter}
+        onFilterSpecies={setSpeciesFilter}
+        onSortChange={setSortOrder}
+        currentStatus={statusFilter}
+        currentSpecies={speciesFilter}
+        currentSort={sortOrder}
+      />
+
+      {loading && !characters.length ? (
+        <LoadingSkeleton count={API_PAGE_SIZE} />
+      ) : error ? (
+        <ErrorState message={error.message} onRetry={refetch} />
+      ) : isEmpty ? (
+        <EmptyState message="No transactions match your search criteria." />
+      ) : (
+        <>
+          <div className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+            Showing{" "}
+            <span className="font-medium text-slate-700 dark:text-slate-200">
+              {Math.min((currentPage - 1) * API_PAGE_SIZE + 1, totalItems)}–
+              {Math.min(currentPage * API_PAGE_SIZE, totalItems)}
+            </span>{" "}
+            of{" "}
+            <span className="font-medium text-slate-700 dark:text-slate-200">
+              {totalItems}
+            </span>{" "}
+            transactions
+          </div>
+          <TransactionList
+            characters={characters}
+            onCardClick={handleCardClick}
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={API_PAGE_SIZE}
+            onPageChange={setCurrentPage}
+          />
+        </>
+      )}
+
+      <TransactionDetail
+        character={selectedCharacter}
+        isOpen={isDetailOpen}
+        onClose={handleCloseDetail}
+        loading={detailLoading}
+        error={detailError ?? null}
+      />
+    </>
+  );
+};
+
+// Shell — safe for SSR. Apollo hooks only run inside IndexContent.
+const IndexPage: React.FC<PageProps> = ({ location }) => {
+  const selectedId = new URLSearchParams(location.search).get("id");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <Layout>
@@ -77,65 +133,10 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         </p>
       </div>
 
-      {/* During SSR (gatsby build) window is unavailable — render a static
-          skeleton so the HTML shell is valid and Apollo only runs in-browser */}
-      {!mounted ? (
-        <LoadingSkeleton count={9} />
+      {mounted ? (
+        <IndexContent selectedId={selectedId} />
       ) : (
-        <>
-          <StatsBar />
-
-          <SearchFilter
-            onSearch={setSearchTerm}
-            onFilterStatus={setStatusFilter}
-            onFilterSpecies={setSpeciesFilter}
-            onSortChange={setSortOrder}
-            currentStatus={statusFilter}
-            currentSpecies={speciesFilter}
-            currentSort={sortOrder}
-          />
-
-          {loading && !characters.length ? (
-            <LoadingSkeleton count={API_PAGE_SIZE} />
-          ) : error ? (
-            <ErrorState message={error.message} onRetry={refetch} />
-          ) : isEmpty ? (
-            <EmptyState message="No transactions match your search criteria." />
-          ) : (
-            <>
-              <div className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-                Showing{" "}
-                <span className="font-medium text-slate-700 dark:text-slate-200">
-                  {Math.min((currentPage - 1) * API_PAGE_SIZE + 1, totalItems)}–
-                  {Math.min(currentPage * API_PAGE_SIZE, totalItems)}
-                </span>{" "}
-                of{" "}
-                <span className="font-medium text-slate-700 dark:text-slate-200">
-                  {totalItems}
-                </span>{" "}
-                transactions
-              </div>
-              <TransactionList
-                characters={characters}
-                onCardClick={handleCardClick}
-              />
-              <Pagination
-                currentPage={currentPage}
-                totalItems={totalItems}
-                itemsPerPage={API_PAGE_SIZE}
-                onPageChange={setCurrentPage}
-              />
-            </>
-          )}
-
-          <TransactionDetail
-            character={selectedCharacter}
-            isOpen={isDetailOpen}
-            onClose={handleCloseDetail}
-            loading={detailLoading}
-            error={detailError ?? null}
-          />
-        </>
+        <LoadingSkeleton count={9} />
       )}
     </Layout>
   );
