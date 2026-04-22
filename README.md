@@ -10,7 +10,7 @@ Mini-aplicación que simula el historial de movimientos de una billetera digital
 
 ## Funcionalidades implementadas
 
-### Requeridas ✅
+### Requeridas 
 
 | # | Requerimiento | Implementación |
 |---|---|---|
@@ -20,7 +20,7 @@ Mini-aplicación que simula el historial de movimientos de una billetera digital
 | Req 4 | Estados completos | Skeleton loader, error con reintentar (+ countdown automático en rate-limit), estado vacío |
 | Req 5 | TypeScript estricto | `strict: true`, sin `any` explícito, interfaces propias para todo el schema de la API |
 
-### Opcionales ✅
+### Opcionales 
 
 | Opcional | Implementación |
 |---|---|
