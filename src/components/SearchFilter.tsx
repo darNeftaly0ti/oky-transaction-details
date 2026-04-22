@@ -1,36 +1,40 @@
 import React, { useState, useEffect } from "react";
-import type { SortOrder } from "../hooks/useLaunches";
+import type { SortOrder } from "../hooks/useCharacters";
 
-const ROCKET_OPTIONS = [
-  { label: "All rockets", value: "" },
-  { label: "Falcon 1", value: "Falcon 1" },
-  { label: "Falcon 9", value: "Falcon 9" },
-  { label: "Starship", value: "Starship" },
+const SPECIES_OPTIONS = [
+  { label: "All species", value: "" },
+  { label: "Human", value: "Human" },
+  { label: "Alien", value: "Alien" },
+  { label: "Humanoid", value: "Humanoid" },
+  { label: "Robot", value: "Robot" },
+  { label: "Animal", value: "Animal" },
+  { label: "Mythological", value: "Mythological Creature" },
 ];
 
-const STATUS_OPTIONS: { label: string; value: boolean | null }[] = [
-  { label: "All", value: null },
-  { label: "Success", value: true },
-  { label: "Failed", value: false },
+const STATUS_OPTIONS: { label: string; value: string }[] = [
+  { label: "All", value: "" },
+  { label: "Alive", value: "alive" },
+  { label: "Dead", value: "dead" },
+  { label: "Unknown", value: "unknown" },
 ];
 
 interface SearchFilterProps {
   onSearch: (term: string) => void;
-  onFilterSuccess: (value: boolean | null) => void;
-  onFilterRocket: (value: string) => void;
+  onFilterStatus: (value: string) => void;
+  onFilterSpecies: (value: string) => void;
   onSortChange: (order: SortOrder) => void;
-  currentFilter: boolean | null;
-  currentRocket: string;
+  currentStatus: string;
+  currentSpecies: string;
   currentSort: SortOrder;
 }
 
 const SearchFilter: React.FC<SearchFilterProps> = ({
   onSearch,
-  onFilterSuccess,
-  onFilterRocket,
+  onFilterStatus,
+  onFilterSpecies,
   onSortChange,
-  currentFilter,
-  currentRocket,
+  currentStatus,
+  currentSpecies,
   currentSort,
 }) => {
   const [inputValue, setInputValue] = useState("");
@@ -42,21 +46,29 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
     return () => clearTimeout(timer);
   }, [inputValue, onSearch]);
 
-  // Active filter chips
   const chips: { label: string; onRemove: () => void }[] = [];
   if (inputValue)
-    chips.push({ label: `Name: "${inputValue}"`, onRemove: () => setInputValue("") });
-  if (currentFilter !== null)
     chips.push({
-      label: currentFilter ? "Status: Success" : "Status: Failed",
-      onRemove: () => onFilterSuccess(null),
+      label: `Name: "${inputValue}"`,
+      onRemove: () => setInputValue(""),
     });
-  if (currentRocket)
-    chips.push({ label: `Rocket: ${currentRocket}`, onRemove: () => onFilterRocket("") });
+  if (currentStatus)
+    chips.push({
+      label: `Status: ${currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1)}`,
+      onRemove: () => onFilterStatus(""),
+    });
+  if (currentSpecies)
+    chips.push({
+      label: `Species: ${currentSpecies}`,
+      onRemove: () => onFilterSpecies(""),
+    });
 
   return (
-    <div role="search" aria-label="Filter transactions" className="mb-6 space-y-3">
-      {/* Row 1: search + sort */}
+    <div
+      role="search"
+      aria-label="Filter transactions"
+      className="mb-6 space-y-3"
+    >
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <label htmlFor="search-input" className="sr-only">
@@ -64,15 +76,22 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
           </label>
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500"
-            fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
           <input
             id="search-input"
             type="text"
-            placeholder="Search by mission name..."
+            placeholder="Search by name..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-slate-300 dark:border-slate-600
@@ -84,9 +103,10 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
           />
         </div>
 
-        {/* Sort toggle */}
         <button
-          onClick={() => onSortChange(currentSort === "newest" ? "oldest" : "newest")}
+          onClick={() =>
+            onSortChange(currentSort === "newest" ? "oldest" : "newest")
+          }
           aria-label={`Sort by date: currently ${currentSort} first`}
           className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg
             border border-slate-300 dark:border-slate-600
@@ -96,25 +116,34 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
             transition-colors focus:outline-none focus:ring-2 focus:ring-oky-secondary
             whitespace-nowrap"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+            />
           </svg>
           {currentSort === "newest" ? "Newest first" : "Oldest first"}
         </button>
       </div>
 
-      {/* Row 2: status filters + rocket dropdown */}
       <div className="flex flex-wrap gap-2 items-center">
-        <div className="flex gap-2" role="group" aria-label="Filter by status">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">
           {STATUS_OPTIONS.map((opt) => (
             <button
               key={opt.label}
-              onClick={() => onFilterSuccess(opt.value)}
-              aria-pressed={currentFilter === opt.value}
+              onClick={() => onFilterStatus(opt.value)}
+              aria-pressed={currentStatus === opt.value}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors
                 focus:outline-none focus:ring-2 focus:ring-oky-secondary ${
-                  currentFilter === opt.value
+                  currentStatus === opt.value
                     ? "bg-oky-primary dark:bg-oky-secondary text-white"
                     : "bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                 }`}
@@ -124,13 +153,14 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
           ))}
         </div>
 
-        {/* Rocket filter */}
         <div className="relative">
-          <label htmlFor="rocket-filter" className="sr-only">Filter by rocket</label>
+          <label htmlFor="species-filter" className="sr-only">
+            Filter by species
+          </label>
           <select
-            id="rocket-filter"
-            value={currentRocket}
-            onChange={(e) => onFilterRocket(e.target.value)}
+            id="species-filter"
+            value={currentSpecies}
+            onChange={(e) => onFilterSpecies(e.target.value)}
             className="appearance-none pl-9 pr-8 py-2 text-sm font-medium rounded-lg
               border border-slate-300 dark:border-slate-600
               bg-white dark:bg-slate-800
@@ -139,7 +169,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
               focus:outline-none focus:ring-2 focus:ring-oky-secondary
               transition-colors cursor-pointer"
           >
-            {ROCKET_OPTIONS.map((opt) => (
+            {SPECIES_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
@@ -147,17 +177,26 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
           </select>
           <svg
             className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none"
-            fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
           </svg>
         </div>
       </div>
 
-      {/* Row 3: active filter chips */}
       {chips.length > 0 && (
-        <div className="flex flex-wrap gap-2 items-center" aria-label="Active filters">
+        <div
+          className="flex flex-wrap gap-2 items-center"
+          aria-label="Active filters"
+        >
           <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
             Active filters:
           </span>
@@ -177,8 +216,19 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
                 className="w-4 h-4 rounded-full hover:bg-oky-primary/20 dark:hover:bg-oky-secondary/30
                   flex items-center justify-center transition-colors focus:outline-none"
               >
-                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-2.5 h-2.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </span>
@@ -186,8 +236,8 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
           <button
             onClick={() => {
               setInputValue("");
-              onFilterSuccess(null);
-              onFilterRocket("");
+              onFilterStatus("");
+              onFilterSpecies("");
             }}
             className="text-xs text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400
               transition-colors underline focus:outline-none"

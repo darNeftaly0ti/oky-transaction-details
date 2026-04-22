@@ -1,14 +1,14 @@
 import React from "react";
-import type { Launch } from "../types/api";
+import type { Character } from "../types/api";
 import TransactionCard from "./TransactionCard";
 
 interface TransactionListProps {
-  launches: Launch[];
+  characters: Character[];
   onCardClick: (id: string) => void;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({
-  launches,
+  characters,
   onCardClick,
 }) => {
   return (
@@ -17,10 +17,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
       aria-label="Transaction list"
       className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
     >
-      {launches.map((launch) => (
+      {characters.map((character) => (
         <TransactionCard
-          key={launch.id}
-          launch={launch}
+          key={character.id}
+          character={character}
           onClick={onCardClick}
         />
       ))}

@@ -10,48 +10,46 @@ import LoadingSkeleton from "../components/LoadingSkeleton";
 import ErrorState from "../components/ErrorState";
 import EmptyState from "../components/EmptyState";
 import StatsBar from "../components/StatsBar";
-import { useLaunches } from "../hooks/useLaunches";
-import { useLaunchDetail } from "../hooks/useLaunchDetail";
-
-const PAGE_SIZE = 9;
+import { useCharacters, API_PAGE_SIZE } from "../hooks/useCharacters";
+import { useCharacterDetail } from "../hooks/useCharacterDetail";
 
 const IndexPage: React.FC<PageProps> = ({ location }) => {
   const params = new URLSearchParams(location.search);
   const selectedId = params.get("id");
 
   const {
-    launches,
+    characters,
     loading,
     error,
     isEmpty,
     currentPage,
     totalItems,
-    successFilter,
-    rocketFilter,
+    statusFilter,
+    speciesFilter,
     sortOrder,
     setCurrentPage,
     setSearchTerm,
-    setSuccessFilter,
-    setRocketFilter,
+    setStatusFilter,
+    setSpeciesFilter,
     setSortOrder,
     refetch,
-  } = useLaunches({ pageSize: PAGE_SIZE });
+  } = useCharacters();
 
   const {
-    launch: selectedLaunch,
+    character: selectedCharacter,
     loading: detailLoading,
     error: detailError,
-    fetchLaunch,
-    clearLaunch,
-  } = useLaunchDetail();
+    fetchCharacter,
+    clearCharacter,
+  } = useCharacterDetail();
 
   useEffect(() => {
     if (selectedId) {
-      fetchLaunch(selectedId);
+      fetchCharacter(selectedId);
     } else {
-      clearLaunch();
+      clearCharacter();
     }
-  }, [selectedId, fetchLaunch, clearLaunch]);
+  }, [selectedId, fetchCharacter, clearCharacter]);
 
   const handleCardClick = useCallback((id: string) => {
     void navigate(`/?id=${id}`);
@@ -78,16 +76,16 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
       <SearchFilter
         onSearch={setSearchTerm}
-        onFilterSuccess={setSuccessFilter}
-        onFilterRocket={setRocketFilter}
+        onFilterStatus={setStatusFilter}
+        onFilterSpecies={setSpeciesFilter}
         onSortChange={setSortOrder}
-        currentFilter={successFilter}
-        currentRocket={rocketFilter}
+        currentStatus={statusFilter}
+        currentSpecies={speciesFilter}
         currentSort={sortOrder}
       />
 
-      {loading && !launches.length ? (
-        <LoadingSkeleton count={PAGE_SIZE} />
+      {loading && !characters.length ? (
+        <LoadingSkeleton count={API_PAGE_SIZE} />
       ) : error ? (
         <ErrorState message={error.message} onRetry={refetch} />
       ) : isEmpty ? (
@@ -97,8 +95,8 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
           <div className="mb-4 text-sm text-slate-500 dark:text-slate-400">
             Showing{" "}
             <span className="font-medium text-slate-700 dark:text-slate-200">
-              {Math.min((currentPage - 1) * PAGE_SIZE + 1, totalItems)}–
-              {Math.min(currentPage * PAGE_SIZE, totalItems)}
+              {Math.min((currentPage - 1) * API_PAGE_SIZE + 1, totalItems)}–
+              {Math.min(currentPage * API_PAGE_SIZE, totalItems)}
             </span>{" "}
             of{" "}
             <span className="font-medium text-slate-700 dark:text-slate-200">
@@ -106,18 +104,21 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
             </span>{" "}
             transactions
           </div>
-          <TransactionList launches={launches} onCardClick={handleCardClick} />
+          <TransactionList
+            characters={characters}
+            onCardClick={handleCardClick}
+          />
           <Pagination
             currentPage={currentPage}
             totalItems={totalItems}
-            itemsPerPage={PAGE_SIZE}
+            itemsPerPage={API_PAGE_SIZE}
             onPageChange={setCurrentPage}
           />
         </>
       )}
 
       <TransactionDetail
-        launch={selectedLaunch}
+        character={selectedCharacter}
         isOpen={isDetailOpen}
         onClose={handleCloseDetail}
         loading={detailLoading}
@@ -132,6 +133,9 @@ export default IndexPage;
 export const Head: HeadFC = () => (
   <>
     <title>OKY Wallet — Transaction Explorer</title>
-    <meta name="description" content="Browse your OKY Wallet transaction history." />
+    <meta
+      name="description"
+      content="Browse your OKY Wallet transaction history."
+    />
   </>
 );

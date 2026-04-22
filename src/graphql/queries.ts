@@ -1,70 +1,96 @@
 import { gql } from "@apollo/client";
 
-export const GET_LAUNCHES = gql`
-  query GetLaunches($limit: Int, $offset: Int, $find: LaunchFind) {
-    launches(limit: $limit, offset: $offset, find: $find) {
-      id
-      mission_name
-      launch_date_local
-      launch_success
-      details
-      launch_site {
-        site_name_long
-      }
-      links {
-        mission_patch_small
-        article_link
-        video_link
-      }
-      rocket {
-        rocket_name
-        rocket_type
-      }
-    }
-  }
-`;
+/**
+ * Rick and Morty GraphQL API — https://rickandmortyapi.com/graphql
+ *
+ * Each "character" is displayed as a "transaction" in the OKY Wallet UI.
+ * The API returns 20 results per page natively, and `info` carries the
+ * pagination metadata (count, pages, next, prev).
+ */
 
-export const GET_LAUNCH = gql`
-  query GetLaunch($id: ID!) {
-    launch(id: $id) {
-      id
-      mission_name
-      launch_date_local
-      launch_success
-      details
-      launch_site {
-        site_name_long
+export const GET_CHARACTERS = gql`
+  query GetCharacters($page: Int, $filter: FilterCharacter) {
+    characters(page: $page, filter: $filter) {
+      info {
+        count
+        pages
+        next
+        prev
       }
-      links {
-        mission_patch_small
-        mission_patch
-        article_link
-        video_link
-        flickr_images
-      }
-      rocket {
-        rocket_name
-        rocket_type
-        rocket {
-          description
-          first_flight
-          cost_per_launch
+      results {
+        id
+        name
+        status
+        species
+        gender
+        image
+        created
+        origin {
+          id
+          name
+        }
+        location {
+          id
+          name
         }
       }
     }
   }
 `;
 
-export const GET_LAUNCHES_COUNT = gql`
-  query GetLaunchesCount($find: LaunchFind) {
-    launchesCount(find: $find)
+export const GET_CHARACTER = gql`
+  query GetCharacter($id: ID!) {
+    character(id: $id) {
+      id
+      name
+      status
+      species
+      type
+      gender
+      image
+      created
+      origin {
+        id
+        name
+        dimension
+        type
+      }
+      location {
+        id
+        name
+        dimension
+        type
+      }
+      episode {
+        id
+        name
+        episode
+        air_date
+      }
+    }
   }
 `;
 
+/**
+ * We fetch three parallel counts using GraphQL aliases — total, alive, dead —
+ * so we can build a stats dashboard with a single round-trip.
+ */
 export const GET_STATS = gql`
   query GetStats {
-    total: launchesCount
-    successful: launchesCount(find: { launch_success: true })
-    failed: launchesCount(find: { launch_success: false })
+    total: characters {
+      info {
+        count
+      }
+    }
+    alive: characters(filter: { status: "alive" }) {
+      info {
+        count
+      }
+    }
+    dead: characters(filter: { status: "dead" }) {
+      info {
+        count
+      }
+    }
   }
 `;
