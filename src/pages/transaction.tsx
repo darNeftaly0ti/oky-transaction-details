@@ -247,12 +247,19 @@ const TransactionDetailContent: React.FC<{ id: string }> = ({ id }) => {
 // navigate() must live in useEffect — calling it in the render body accesses
 // window directly, which breaks gatsby build's SSR pass.
 const TransactionDetailPage: React.FC<PageProps> = ({ params }) => {
-  const id = params.id as string | undefined;
   const [mounted, setMounted] = useState(false);
+  const [id, setId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // params.id from Gatsby's matchPath can arrive empty on client-side
+    // navigation. Reading from window.location is the reliable fallback.
+    const fromParams = params?.id as string | undefined;
+    const fromUrl = window.location.pathname.split("/").filter(Boolean).pop();
+    const resolvedId =
+      fromParams && fromParams !== "transaction" ? fromParams : fromUrl;
+    setId(resolvedId && resolvedId !== "transaction" ? resolvedId : undefined);
+  }, [params?.id]);
 
   useEffect(() => {
     if (mounted && !id) {
